@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title></title>
+<link type="text/css" rel="stylesheet" href="res/css/style.css" />
+<script type="text/javascript" src="res/js/game.php"></script>
+<script id="per-fragment-lighting-fs" type="x-shader/x-fragment">
+	precision mediump float;
+
+	varying vec2 vTextureCoord;
+	varying vec3 vTransformedNormal;
+	varying vec4 vPosition;
+	uniform vec3 uAmbientColor;
+	uniform vec3 uPointLightingLocation;
+	uniform vec3 uPointLightingSpecularColor;
+	uniform vec3 uPointLightingDiffuseColor;
+	uniform sampler2D uColorMapSampler;
+
+	void main(void) {
+		vec3 lightWeighting;
+		vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
+		vec3 normal = normalize(vTransformedNormal);
+
+		float diffuseLightWeighting = max(dot(normal, lightDirection), 0.0);
+		lightWeighting = uAmbientColor
+			+ uPointLightingSpecularColor 
+			+ uPointLightingDiffuseColor * diffuseLightWeighting;
+
+		vec4 fragmentColor;
+		fragmentColor = texture2D(uColorMapSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+		gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a);
+	}
+</script>
+<script id="per-fragment-lighting-vs" type="x-shader/x-vertex">
+	attribute vec3 aVertexPosition;
+	attribute vec3 aVertexNormal;
+	attribute vec2 aTextureCoord;
+
+	uniform mat4 uMVMatrix;
+	uniform mat4 uPMatrix;
+	uniform mat3 uNMatrix;
+
+	varying vec2 vTextureCoord;
+	varying vec3 vTransformedNormal;
+	varying vec4 vPosition;
+
+	void main(void) {
+		vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+		gl_Position = uPMatrix * vPosition;
+		vTextureCoord = aTextureCoord;
+		vTransformedNormal = uNMatrix * aVertexNormal;
+	}
+</script>
+</head>
+<body>
+
+<canvas id="canvas" width="900" height="600"></canvas>
+<!--
+<br/>
+<button onclick="game.pause();">Stop</button>
+-->
+<div id="images">
+	<img id="bg1" src="res/img/background01.jpg"/>
+</div>
+
+</body>
+</html>
